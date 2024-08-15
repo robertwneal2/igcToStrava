@@ -16,5 +16,8 @@ igc_filename = filename + '.IGC'
 gpx_filename = filename + '.gpx'
 
 #  Run gpsBabel command
-# gpsBabelCmd = f"gpsbabel -i igc -f {igc_filename} -o gpx -F {gpx_filename}"
 call(['gpsbabel', '-i', 'igc', '-f', igc_filename, '-o', 'gpx', '-F', gpx_filename])
+
+#  Edit GPX file
+f = open(gpx_filename, "w")
+print(f.read())
