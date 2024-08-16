@@ -71,7 +71,7 @@ name = 'Paragliding'
 data_type = 'gpx'
 url = 'https://www.strava.com/api/v3/uploads'
 gpx_file = open(gpx_filename, 'rb')
-sport_type = 'workout'
+sport_type = 'Workout'
 
 headers = {'Authorization': 'Bearer ' + access_token}
 
