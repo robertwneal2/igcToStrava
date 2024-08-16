@@ -4,7 +4,6 @@
 from dotenv import load_dotenv  # pip install python-dotenv
 import json
 import os
-from requests_oauthlib import OAuth2Session
 import requests
 import tkinter as tk
 from tkinter import filedialog
@@ -49,7 +48,6 @@ with open(gpx_filename, 'w') as file:  # Write new gpx array to file
     file.writelines(new_gpx_data)
 
 #  Upload gpx to Strava
-
 authorization_url = f'https://www.strava.com/oauth/authorize?client_id={STRAVA_CLIENT_ID}&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=auto&scope=activity:write'
 print(f'Please go to {authorization_url} and authorize access.')
 authorization_response = input('Enter the full callback URL')
@@ -69,16 +67,18 @@ response_dict = json.loads(response.text)
 access_token = response_dict['access_token']
 
 name = 'Paragliding'
-description = 'API test'
+# description = 'API test'
 data_type = 'gpx'
 url = 'https://www.strava.com/api/v3/uploads'
 gpx_file = open(gpx_filename, 'rb')
+sport_type = 'workout'
 
 headers = {'Authorization': 'Bearer ' + access_token}
 
 files = {
+    'sport_type': (None, sport_type),
     'name': (None, name),
-    'description': (None, description),
+    # 'description': (None, description),
     'data_type': (None, data_type),
     'file': gpx_file
 }
