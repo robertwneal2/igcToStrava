@@ -48,23 +48,45 @@ with open(gpx_filename, 'w') as file:  # Write new gpx array to file
     file.writelines(new_gpx_data)
 
 #  Upload gpx to Strava
-authorization_url = f'https://www.strava.com/oauth/authorize?client_id={STRAVA_CLIENT_ID}&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=auto&scope=activity:write'
-print(f'Please go to {authorization_url} and authorize access.')
-authorization_response = input('Enter the full callback URL')
-code_start_idx = authorization_response.find('code=') + 5
-code_end_idx = authorization_response.find('scope=') - 1
-code = authorization_response[code_start_idx:code_end_idx]
 
-files = {
-    'client_id': (None, STRAVA_CLIENT_ID),
-    'client_secret': (None, STRAVA_SECRET),
-    'code': (None, code),
-    'grant_type': (None, 'authorization_code'),
-}
+refresh_token_file = 'refresh_token.txt'
+refresh_token_exists = os.path.exists(refresh_token_file)
 
-response = requests.post('https://www.strava.com/oauth/token', files=files)
+if refresh_token_exists:
+    with open(refresh_token_file, 'r') as file:  # Read gpx file and copy to array
+        refresh_token_file_data = file.readlines()
+    refresh_token = refresh_token_file_data[0]
+
+    data = {
+        'client_id': STRAVA_CLIENT_ID,
+        'client_secret': STRAVA_SECRET,
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token,
+    }
+    response = requests.post('https://www.strava.com/api/v3/oauth/token', data=data)
+
+else:
+    authorization_url = f'https://www.strava.com/oauth/authorize?client_id={STRAVA_CLIENT_ID}&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=auto&scope=activity:write'
+    print(f'Please go to {authorization_url} and authorize access.')
+    authorization_response = input('Enter the full callback URL')
+    code_start_idx = authorization_response.find('code=') + 5
+    code_end_idx = authorization_response.find('scope=') - 1
+    code = authorization_response[code_start_idx:code_end_idx]
+
+    files = {
+        'client_id': (None, STRAVA_CLIENT_ID),
+        'client_secret': (None, STRAVA_SECRET),
+        'code': (None, code),
+        'grant_type': (None, 'authorization_code'),
+    }
+
+    response = requests.post('https://www.strava.com/oauth/token', files=files)
+
 response_dict = json.loads(response.text)
 access_token = response_dict['access_token']
+refresh_token = response_dict['refresh_token']
+with open("refresh_token.txt", "w") as file:
+    file.write(refresh_token)
 
 name = 'Paragliding'
 # description = 'API test'
