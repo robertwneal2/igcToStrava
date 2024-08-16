@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+import subprocess
+
 #  Takes an IGC file from paragliding, uses GPSBabel (must be installed https://www.gpsbabel.org/download.html) to
 #  convert IGC to GPX, then posts it to Strava
 
@@ -5,8 +8,6 @@ from dotenv import load_dotenv  # pip install python-dotenv
 import json
 import os
 import requests
-import tkinter as tk
-from tkinter import filedialog
 from subprocess import call
 
 load_dotenv("/home/bert/PycharmProjects/environment_variables/.env")
@@ -15,9 +16,8 @@ STRAVA_SECRET = os.environ['STRAVA_SECRET']
 STRAVA_REFRESH_TOKEN = os.environ['STRAVA_REFRESH_TOKEN']
 
 #  Select IGC file and create new GPX file name
-root = tk.Tk()
-root.withdraw()
-igc_file_path = filedialog.askopenfilename()
+current_directory = os.getcwd() + '/'
+igc_file_path = subprocess.check_output(['zenity', '--file-selection', '--filename', current_directory]).decode('utf-8').strip()
 last_slash_index = igc_file_path.rfind('/')
 last_dot_index = igc_file_path.rfind('.')
 filename = igc_file_path[last_slash_index+1:last_dot_index]
@@ -52,8 +52,8 @@ with open(gpx_filename, 'w') as file:  # Write new gpx array to file
 refresh_token_file = 'refresh_token.txt'
 refresh_token_exists = os.path.exists(refresh_token_file)
 
-if refresh_token_exists:
-    with open(refresh_token_file, 'r') as file:  # Read gpx file and copy to array
+if refresh_token_exists:  # Check if refresh token exists. If so, use to get response
+    with open(refresh_token_file, 'r') as file:
         refresh_token_file_data = file.readlines()
     refresh_token = refresh_token_file_data[0]
 
@@ -65,7 +65,7 @@ if refresh_token_exists:
     }
     response = requests.post('https://www.strava.com/api/v3/oauth/token', data=data)
 
-else:
+else:  # If no refresh token, authenticate
     authorization_url = f'https://www.strava.com/oauth/authorize?client_id={STRAVA_CLIENT_ID}&response_type=code&redirect_uri=http://localhost/exchange_token&approval_prompt=auto&scope=activity:write'
     print(f'Please go to {authorization_url} and authorize access.')
     authorization_response = input('Enter the full callback URL')
@@ -83,9 +83,9 @@ else:
     response = requests.post('https://www.strava.com/oauth/token', files=files)
 
 response_dict = json.loads(response.text)
-access_token = response_dict['access_token']
-refresh_token = response_dict['refresh_token']
-with open("refresh_token.txt", "w") as file:
+access_token = response_dict['access_token']  # Get access token from response
+refresh_token = response_dict['refresh_token']  # Get refresh token from response
+with open("refresh_token.txt", "w") as file:  # Write refresh token to file
     file.write(refresh_token)
 
 name = 'Paragliding'
